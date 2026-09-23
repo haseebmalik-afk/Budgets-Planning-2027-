@@ -22,7 +22,7 @@
 *{box-sizing:border-box; margin:0; padding:0}
 .shell{display:flex; min-height:calc(100vh - 32px); background:var(--bg);
   border:1px solid var(--shell-line); border-radius:18px; overflow:hidden;
-  box-shadow:0 24px 70px rgba(0,0,0,.5); max-width:1660px; margin:0 auto;}
+  box-shadow:0 24px 70px rgba(0,0,0,.5); max-width:1720px; margin:0 auto;}
 html{-webkit-text-size-adjust:100%}
 body{
   font-family:'Inter',system-ui,sans-serif; background:var(--shell); color:var(--ink);
@@ -36,7 +36,7 @@ input,select{font:inherit; color:inherit}
 
 /* ================= sidebar (CPX) ================= */
 nav{
-  width:204px; min-width:204px; background:var(--nav); border-right:1px solid var(--nav-line);
+  width:216px; min-width:216px; background:var(--nav); border-right:1px solid var(--nav-line);
   display:flex; flex-direction:column;
 }
 nav .brand{display:flex; align-items:center; gap:11px; padding:18px 18px 15px; border-bottom:1px solid var(--nav-line)}
@@ -57,6 +57,7 @@ nav .foot b{color:#4ADE9C; font-weight:600}
 
 /* ================= content ================= */
 .content{flex:1; min-width:0; padding:20px 26px 60px; max-height:calc(100vh - 34px); overflow:auto}
+.content > *{max-width:1420px}
 .hrow{display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap; margin-bottom:14px}
 h1{font-size:1.5rem; font-weight:700; letter-spacing:-.02em}
 .psub{font-size:.76rem; color:var(--muted); margin-top:3px}
@@ -142,8 +143,8 @@ table.dt{width:100%; border-collapse:collapse; font-size:.8rem}
 .leadcell{display:inline-flex; align-items:center; gap:7px; font-weight:600}
 
 /* ================= allocation board ================= */
-.boardwrap{display:grid; grid-template-columns:1fr 330px; gap:16px; align-items:start}
-.bgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:14px}
+.boardwrap{display:grid; grid-template-columns:1fr 300px; gap:16px; align-items:start}
+.bgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(232px,1fr)); gap:13px}
 .tcard{
   background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden;
   box-shadow:var(--shadow); transition:border-color .12s, box-shadow .15s, transform .15s;
@@ -155,7 +156,7 @@ table.dt{width:100%; border-collapse:collapse; font-size:.8rem}
 .tcard.custom.dropping{border-style:solid}
 .tcard > header{padding:14px 16px 4px; display:flex; align-items:flex-start; gap:10px}
 .codewrap{display:flex; align-items:center; gap:5px; min-width:0}
-.code{font-size:1.12rem; font-weight:700; letter-spacing:-.01em; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.code{font-size:1.02rem; font-weight:700; letter-spacing:-.01em; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .rn{border:none; color:var(--faint); font-size:.72rem; padding:2px 5px; border-radius:5px; flex:none; opacity:0; transition:opacity .12s}
 .tcard > header:hover .rn{opacity:1}
 .rn:hover{color:var(--cpx); background:var(--cpx-wash)}
@@ -172,7 +173,7 @@ table.dt{width:100%; border-collapse:collapse; font-size:.8rem}
 .ava{width:21px; height:21px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex:none; overflow:hidden}
 .ava svg{width:14px; height:14px}
 .money{text-align:right; white-space:nowrap}
-.money b{display:block; font-size:1.28rem; font-weight:700; letter-spacing:-.01em}
+.money b{display:block; font-size:1.15rem; font-weight:700; letter-spacing:-.01em}
 .money span{font-size:.67rem; color:var(--muted)}
 .delc{border:none; color:var(--faint); font-size:.76rem; padding:2px 7px; border-radius:6px; flex:none; align-self:flex-start}
 .delc:hover{color:var(--red); background:var(--red-lt)}
@@ -280,9 +281,12 @@ aside.tray{
 .btn{border:1px solid var(--line); border-radius:8px; padding:7px 13px; font-size:.78rem; font-weight:600; background:var(--card)}
 .btn:hover{border-color:var(--cpx); color:var(--cpx)}
 
-@media (max-width:1040px){
+@media (max-width:1200px){
   .boardwrap{grid-template-columns:1fr}
   aside.tray{position:static; max-height:460px; order:-1}
+}
+@media (max-width:1040px){
+  .bgrid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
   .crow{grid-template-columns:74px 1fr 64px}
 }
 @media (max-width:900px){
