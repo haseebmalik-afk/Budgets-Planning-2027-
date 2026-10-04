@@ -320,9 +320,10 @@ aside.tray{
   <button class="navlink" id="expCsv"><span class="ic">⇩</span>Export CSV</button>
   <button class="navlink" id="expJson"><span class="ic">⇩</span>Export JSON</button>
   <button class="navlink" id="hiddenBtn"><span class="ic">◌</span>Hidden lines (0)</button>
+  <button class="navlink" id="ccyBtn"><span class="ic">⇄</span>Currency: <b style="margin-left:4px" id="ccyNow">AED</b></button>
   <button class="navlink" id="reset"><span class="ic">↺</span>Reset board</button>
   <div class="foot">
-    <b>● Live</b> — run rate = avg of Jun–Dec 2026, AED/mo<br>
+    <b>● Live</b> — run rate = avg of Jun–Dec 2026, <span class="ccytag">AED</span>/mo · 1 USD = 3.6725 AED<br>
     <span id="savenote">Auto-saves on this device</span>
   </div>
 </nav>
@@ -331,7 +332,7 @@ aside.tray{
   <div class="hrow">
     <div>
       <h1>Cost Center Ownership</h1>
-      <div class="psub">Group 2026 baseline · ITCAN + CPX &amp; MoonTech · AED <span class="chip o">■ Actual — Jan–Aug</span> <span class="chip n">□ Run rate — avg Jun–Dec 26</span></div>
+      <div class="psub">Group 2026 baseline · ITCAN + CPX &amp; MoonTech · <span class="ccytag">AED</span> <span class="chip o">■ Actual — Jan–Aug</span> <span class="chip n">□ Run rate — avg Jun–Dec 26</span></div>
     </div>
     <div class="grow"></div>
     <input type="search" id="q" placeholder="Find a cost line…" aria-label="Find a cost line">
@@ -348,13 +349,13 @@ aside.tray{
   <section class="view on" id="view-cat">
     <div class="card">
       <h2>Run rate by expense category</h2>
-      <div class="csub">All cost lines, centers and group combined · AED/mo</div>
+      <div class="csub">All cost lines, centers and group combined · <span class="ccytag">AED</span>/mo</div>
       <div id="catBars" style="margin-top:16px"></div>
       <div class="totband num" id="catTot"></div>
     </div>
     <div class="card colchart" style="margin-top:14px">
       <h2>Category detail — the stack</h2>
-      <div class="csub">Monthly cost stacked by category · Jan–Aug actuals, Sep–Dec at run rate · AED</div>
+      <div class="csub">Monthly cost stacked by category · Jan–Aug actuals, Sep–Dec at run rate · <span class="ccytag">AED</span></div>
       <div id="colStack"></div>
       <div class="legend" id="colLegend" style="justify-content:center; margin-top:8px"></div>
     </div>
@@ -401,7 +402,7 @@ aside.tray{
       <div class="csub">Quarterly cells = months at current run rate. Rename centers, assign leaders and move lines on the allocation board.</div>
       <div class="tblwrap"><table class="dt">
         <thead><tr>
-          <th class="l">Cost center</th><th class="l">Leader</th><th>Lines</th><th>AED /mo</th>
+          <th class="l">Cost center</th><th class="l">Leader</th><th>Lines</th><th><span class="ccytag">AED</span> /mo</th>
           <th>Sep–Dec 26</th><th>Q1 27</th><th>Q2 27</th><th>Q3 27</th><th>Q4 27</th><th>FY 2027</th><th class="l">Status</th>
         </tr></thead>
         <tbody id="regBody"></tbody><tfoot id="regFoot"></tfoot>
@@ -475,14 +476,19 @@ function note(msg){ document.getElementById('savenote').textContent = msg; }
 const VIS = () => RAW.filter(l => !state.h.includes(l.id));
 const cur = l => state.a[l.id] || l.home;
 const dn = t => state.r[t] || t;
-const fmt = n => Math.round(n).toLocaleString('en-US');
+const USD_RATE = 3.6725;              // 1 USD = 3.6725 AED
+let CCY = 'AED';                      // active display currency
+function cx(v){ return CCY === 'USD' ? v / USD_RATE : v; }   // convert AED-based value
+const ccyLabel = () => CCY;
+const fmt = n => Math.round(cx(n)).toLocaleString('en-US');
 function fmtK(n){
+  n = cx(n);
   const a = Math.abs(n);
   if(a >= 1e6) return (n/1e6).toFixed(2).replace(/\.?0+$/,'') + 'M';
   if(a >= 1e3) return (n/1e3).toFixed(1).replace(/\.0$/,'') + 'K';
-  return fmt(n);
+  return Math.round(n).toLocaleString('en-US');
 }
-const fmtW = n => Math.abs(n) >= 500 ? Math.round(n/1000).toLocaleString('en-US') + 'K' : fmt(n);
+const fmtW = n => { const v = cx(n); return Math.abs(v) >= 500 ? Math.round(v/1000).toLocaleString('en-US') + 'K' : Math.round(v).toLocaleString('en-US'); };
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 function allCenters(){ return teamIds.concat(state.c); }
@@ -551,7 +557,7 @@ function renderCat(){
     '<div class="cbar"><i style="width:'+(r.mo/max*100)+'%; background:'+CCOL[r.c]+'" title="'+fmt(r.mo)+' /mo · '+r.n+' lines"></i></div>' +
     '<span class="cv num">'+fmtW(r.mo)+'</span></div>').join('');
   document.getElementById('catTot').innerHTML =
-    'Total <span class="sub">'+V.length+' cost lines</span><span class="sp"></span>AED '+fmt(totMo)+' /mo <span class="sub">· '+fmtK(totMo*12)+' annualised</span>';
+    'Total <span class="sub">'+V.length+' cost lines</span><span class="sp"></span>'+ccyLabel()+' '+fmt(totMo)+' /mo <span class="sub">· '+fmtK(totMo*12)+' annualised</span>';
 
   // stacked columns Jan-Dec 2026
   const vals = {};
@@ -577,7 +583,7 @@ function renderCat(){
     CATS.forEach(c => {
       const v = vals[c][i]; if(v<=0) return;
       const h = (v/maxV)*ih;
-      g+='<rect x="'+(cx-colw/2)+'" y="'+(yBase-h)+'" width="'+colw+'" height="'+h+'" fill="'+CHEX[c]+'"'+(i>=ACTUAL_UPTO?' opacity="0.55"':'')+'><title>'+MS[i]+' · '+c+': AED '+fmt(v)+'</title></rect>';
+      g+='<rect x="'+(cx-colw/2)+'" y="'+(yBase-h)+'" width="'+colw+'" height="'+h+'" fill="'+CHEX[c]+'"'+(i>=ACTUAL_UPTO?' opacity="0.55"':'')+'><title>'+MS[i]+' · '+c+': '+ccyLabel()+' '+fmt(v)+'</title></rect>';
       yBase -= h;
     });
     g+='<text x="'+cx+'" y="'+(H-8)+'" text-anchor="middle" font-size="10.5" fill="var(--muted)">'+MS[i]+'</text>';
@@ -609,7 +615,7 @@ function renderChart(){
       '<span class="cv num">'+fmtW(tot)+'</span></div>';
   }).join('');
   document.getElementById('teamTot').innerHTML =
-    'Total <span class="sub">'+allCenters().length+' centers + group</span><span class="sp"></span>AED '+fmt(tm)+' /mo';
+    'Total <span class="sub">'+allCenters().length+' centers + group</span><span class="sp"></span>'+ccyLabel()+' '+fmt(tm)+' /mo';
 }
 document.getElementById('chart').addEventListener('click', e => {
   const r = e.target.closest('.crow'); if(!r) return;
@@ -672,7 +678,7 @@ function renderTrend(){
     g += '<path d="'+act+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linejoin="round"/>' +
          '<path d="'+prj+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-dasharray="5 4" stroke-linejoin="round"/>';
     s.vals.forEach((v,i)=>{
-      g += '<circle cx="'+x(i)+'" cy="'+y(v)+'" r="6" fill="transparent"><title>'+esc(s.name)+' · '+MONLAB[i]+': AED '+fmt(v)+'</title></circle>';
+      g += '<circle cx="'+x(i)+'" cy="'+y(v)+'" r="6" fill="transparent"><title>'+esc(s.name)+' · '+MONLAB[i]+': '+ccyLabel()+' '+fmt(v)+'</title></circle>';
     });
   });
   document.getElementById('lchart').innerHTML =
@@ -729,7 +735,7 @@ function pillEl(l){
   const sp = document.createElement('span');
   sp.className = 'pill' + (moved?' moved':'') + (l.mo===0?' zero':'');
   sp.draggable = true; sp.dataset.id = l.id;
-  sp.title = l.src + (moved ? '  ·  from ' + (l.home===GROUP?'Group':dn(l.home)) : '') + '  ·  FY 2026: AED ' + fmt(l.fy) + '  —  click to move, drag to reassign';
+  sp.title = l.src + (moved ? '  ·  from ' + (l.home===GROUP?'Group':dn(l.home)) : '') + '  ·  FY 2026: ' + ccyLabel() + ' ' + fmt(l.fy) + '  —  click to move, drag to reassign';
   sp.innerHTML =
     '<span class="dot" style="background:'+CCOL[l.cat]+'"></span>' +
     '<span class="pn">'+esc(l.name)+'</span>' +
@@ -1255,6 +1261,18 @@ document.getElementById('mCopy').addEventListener('click', async () => {
 });
 
 /* reset */
+function applyCcyTags(){
+  document.querySelectorAll('.ccytag').forEach(el => el.textContent = CCY);
+  document.getElementById('ccyNow').textContent = CCY;
+}
+document.getElementById('ccyBtn').addEventListener('click', () => {
+  CCY = (CCY === 'AED') ? 'USD' : 'AED';
+  try{ localStorage.setItem(LS_KEY+'-ccy', CCY); }catch(e){}
+  applyCcyTags();
+  render();
+  note(CCY === 'USD' ? 'Showing USD @ 3.6725' : 'Showing AED');
+});
+
 document.getElementById('reset').addEventListener('click', () => {
   if(!confirm('Reset the board to the file baseline? All moves, leaders, renames, hidden lines and new cost centers on this device will be cleared.')) return;
   state = {a:{}, l:{}, c:[], p:[], r:{}, h:[]};
@@ -1266,6 +1284,8 @@ document.getElementById('reset').addEventListener('click', () => {
 
 /* boot */
 loadState();
+try{ const sc = localStorage.getItem(LS_KEY+'-ccy'); if(sc==='USD'||sc==='AED') CCY = sc; }catch(e){}
+applyCcyTags();
 render();
 if(!lsOk) note('Local save unavailable — use Export');
 else if(Object.keys(state.a).length || Object.keys(state.l).length || state.c.length || state.h.length) note('Restored saved board');
