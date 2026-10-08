@@ -67,6 +67,14 @@ h1{font-size:1.5rem; font-weight:700; letter-spacing:-.02em}
 .card{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:18px; min-width:0; box-shadow:var(--shadow)}
 .card h2{font-size:1.05rem; font-weight:600; letter-spacing:-.01em}
 .csub{font-size:.75rem; color:var(--muted); margin-top:2px}
+.gl h3{font-size:.82rem; font-weight:700; color:var(--cpx); margin:16px 0 7px; text-transform:uppercase; letter-spacing:.03em}
+.glgrid{display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:6px}
+@media(max-width:800px){ .glgrid{grid-template-columns:1fr; gap:0} }
+.gl ul{list-style:none; margin:0; padding:0}
+.gl li{position:relative; padding:5px 0 5px 20px; font-size:.86rem; line-height:1.5; border-bottom:1px solid var(--line2)}
+.gl li:before{content:"–"; position:absolute; left:4px; color:var(--cpx); font-weight:700}
+.gl li b{font-weight:700}
+.glnote{margin-top:20px; background:var(--cpx-wash); border:1px solid var(--cpx-lt); border-radius:10px; padding:13px 16px; font-size:.84rem; line-height:1.5}
 
 .chip{display:inline-flex; align-items:center; gap:4px; font-size:.68rem; font-weight:600; padding:2px 9px; border-radius:999px; white-space:nowrap}
 .chip.g{background:var(--green-lt); color:var(--green)}
@@ -323,6 +331,7 @@ aside.tray{
   <button class="navlink" data-view="board"><span class="ic">▦</span>Resource planning</button>
   <button class="navlink" data-view="growth"><span class="ic">◆</span>Growth Spend</button>
   <button class="navlink" data-view="trend"><span class="ic">◉</span>Run rate &amp; 2027</button>
+  <button class="navlink" data-view="rules"><span class="ic">◈</span>Guidelines</button>
   <div class="grp">Meeting</div>
   <button class="navlink" id="expAll"><span class="ic">＋</span>Expand all</button>
   <button class="navlink" id="colAll"><span class="ic">－</span>Collapse all</button>
@@ -433,6 +442,61 @@ aside.tray{
         </tr></thead>
         <tbody id="regBody"></tbody><tfoot id="regFoot"></tfoot>
       </table></div>
+    </div>
+  </section>
+
+  <!-- GUIDELINES -->
+  <section class="view" id="view-rules">
+    <div class="card gl">
+      <h2>Budget guidelines</h2>
+      <div class="csub">How resource planning budgets are set and managed. Read before you submit your 2027 numbers.</div>
+
+      <div class="glgrid">
+        <div class="glcol">
+          <h3>Who owns what</h3>
+          <ul>
+            <li><b>One owner per cost.</b> Every expense belongs to one leader. No shared or unowned lines.</li>
+            <li><b>You own it both ways.</b> You answer for spending too much <i>and</i> too little.</li>
+            <li><b>New requests go in the plan.</b> A new hire, tool or campaign is added with its full cost and checked against cash flow before it is approved.</li>
+          </ul>
+
+          <h3>How to set the number</h3>
+          <ul>
+            <li><b>Budget the full cost.</b> Include everything a decision brings with it — not just the headline price.</li>
+            <li><b>A hire is not just a salary.</b> Add agency or recruitment fees, visa, medical, social insurance, laptop, software seats and any per-diem.</li>
+            <li><b>Split the year into months.</b> A budget is a monthly plan. Do not add up a few months and call it the year. Spread the full amount across all 12 months.</li>
+            <li><b>Mark what is fixed.</b> Separate costs you cannot avoid (signed contracts, salaries) from costs you can change. Only the flexible part can be cut later.</li>
+          </ul>
+        </div>
+
+        <div class="glcol">
+          <h3>Money rules</h3>
+          <ul>
+            <li><b>Everything in USD.</b> Budgets are set and tracked in US dollars.</li>
+            <li><b>Fixed rate.</b> We use 1 USD = 3.6725 AED all year. Currency moves are not your problem.</li>
+            <li><b>No carry-forward.</b> Money you do not spend does not roll over — not to next month, not to next year. If you truly need to carry something, ask and get it approved.</li>
+          </ul>
+
+          <h3>Changes &amp; approvals</h3>
+          <ul>
+            <li><b>Move money inside your own budget freely.</b> You can shift between your categories (e.g. systems → freelancers) without asking.</li>
+            <li><b>Moving money to another leader needs finance sign-off.</b></li>
+            <li><b>Hiring and exits always need sign-off</b> — even if the money is already in your budget.</li>
+            <li><b>Small overspends you absorb. Big ones need approval first.</b> Finance will set the limit.</li>
+          </ul>
+
+          <h3>How we run it</h3>
+          <ul>
+            <li><b>One system only.</b> All budgets are raised, changed and tracked in the budgeting system. No side spending.</li>
+            <li><b>Check monthly.</b> We compare actual vs budget every month.</li>
+            <li><b>Re-forecast each quarter.</b> Numbers are refreshed four times a year.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="glnote">
+        <b>A note on fairness.</b> Variances are a conversation, not a scorecard. Underspending because you found a smarter, cheaper way is a good thing — not something to hide or "use up" before year-end.
+      </div>
     </div>
   </section>
 </div>
@@ -1390,12 +1454,19 @@ function stamp(){ return new Date().toISOString().slice(0,16).replace(':',''); }
 function csvEsc(v){ v = String(v==null?'':v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
 function visibleLines(){ return RAW.filter(l => !state.h.includes(l.id)); }
 // Tab 1: line detail (AED), only the requested columns
+function resourceName(l){
+  if(l.cat === 'Payroll') return '(contact TR for disclosure)';
+  return l.name;   // Systems vendor / Perdiem person / etc.
+}
 function detailAoA(){
-  const head = ['Category','Entity','Original cost center','Current cost center','Cost center owner',
+  const head = ['Category','Resource','Entity','Original cost center','New cost center','Cost center owner',
                 'Actual Jan–Aug (AED)','Monthly run rate (AED)','FY2026 proj (AED)','FY2027 proj (AED)'];
   const rows = visibleLines().map(l => {
     const c = cur(l);
-    return [l.cat, l.entity, (l.home===GROUP?'Group':dn(l.home)), (c===GROUP?'Group':dn(c)),
+    // Original = untouched code (never the rename); New = current display name
+    return [l.cat, resourceName(l), l.entity,
+            (l.home===GROUP?'Group':l.home),
+            (c===GROUP?'Group':dn(c)),
             (c===GROUP ? '' : (state.l[c]||'')),
             Math.round(l.act||0), Math.round(l.mo), Math.round(l.fy), Math.round(l.mo*12)];
   });
@@ -1439,7 +1510,7 @@ function exportXlsx(){
   wsP['!cols'] = [{wch:26},{wch:14},{wch:7},{wch:20},{wch:20},{wch:18},{wch:18}];
   XLSX.utils.book_append_sheet(wb, wsP, 'By cost center');
   const wsD = XLSX.utils.aoa_to_sheet(detailAoA());
-  wsD['!cols'] = [{wch:16},{wch:16},{wch:20},{wch:20},{wch:16},{wch:18},{wch:18},{wch:16},{wch:16}];
+  wsD['!cols'] = [{wch:14},{wch:30},{wch:14},{wch:18},{wch:18},{wch:16},{wch:18},{wch:18},{wch:16},{wch:16}];
   XLSX.utils.book_append_sheet(wb, wsD, 'Line detail');
   let tabs = 2;
   if(state.gs.length){
