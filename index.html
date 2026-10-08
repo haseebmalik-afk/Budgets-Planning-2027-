@@ -75,6 +75,17 @@ h1{font-size:1.5rem; font-weight:700; letter-spacing:-.02em}
 .gl li:before{content:"–"; position:absolute; left:4px; color:var(--cpx); font-weight:700}
 .gl li b{font-weight:700}
 .glnote{margin-top:20px; background:var(--cpx-wash); border:1px solid var(--cpx-lt); border-radius:10px; padding:13px 16px; font-size:.84rem; line-height:1.5}
+.glhint{margin-top:14px; font-size:.74rem; color:var(--muted); background:var(--thead); border:1px dashed var(--line); border-radius:8px; padding:8px 12px}
+.gl.editing [contenteditable]{outline:1px dashed var(--cpx-lt); border-radius:4px; padding:1px 3px; min-width:20px}
+.gl.editing [contenteditable]:focus{outline:1.5px solid var(--cpx); background:var(--cpx-wash)}
+.gl .glli{display:flex; gap:6px; align-items:flex-start}
+.gl .glli .xbtn,.gl .secx{display:none; border:none; color:var(--faint); font-size:.72rem; padding:0 4px; border-radius:4px; flex:none; margin-top:5px}
+.gl.editing .glli .xbtn,.gl.editing .secx{display:inline-block}
+.gl .glli .xbtn:hover,.gl .secx:hover{color:var(--red); background:var(--red-lt)}
+.gl .addbtn{display:none; font-size:.73rem; font-weight:600; color:var(--cpx); padding:4px 2px}
+.gl.editing .addbtn{display:inline-block}
+.gl .addbtn:hover{text-decoration:underline}
+.gl .sechead{display:flex; align-items:center; gap:6px}
 
 .chip{display:inline-flex; align-items:center; gap:4px; font-size:.68rem; font-weight:600; padding:2px 9px; border-radius:999px; white-space:nowrap}
 .chip.g{background:var(--green-lt); color:var(--green)}
@@ -447,56 +458,19 @@ aside.tray{
 
   <!-- GUIDELINES -->
   <section class="view" id="view-rules">
-    <div class="card gl">
-      <h2>Budget guidelines</h2>
-      <div class="csub">How resource planning budgets are set and managed. Read before you submit your 2027 numbers.</div>
-
-      <div class="glgrid">
-        <div class="glcol">
-          <h3>Who owns what</h3>
-          <ul>
-            <li><b>One owner per cost.</b> Every expense belongs to one leader. No shared or unowned lines.</li>
-            <li><b>You own it both ways.</b> You answer for spending too much <i>and</i> too little.</li>
-            <li><b>New requests go in the plan.</b> A new hire, tool or campaign is added with its full cost and checked against cash flow before it is approved.</li>
-          </ul>
-
-          <h3>How to set the number</h3>
-          <ul>
-            <li><b>Budget the full cost.</b> Include everything a decision brings with it — not just the headline price.</li>
-            <li><b>A hire is not just a salary.</b> Add agency or recruitment fees, visa, medical, social insurance, laptop, software seats and any per-diem.</li>
-            <li><b>Split the year into months.</b> A budget is a monthly plan. Do not add up a few months and call it the year. Spread the full amount across all 12 months.</li>
-            <li><b>Mark what is fixed.</b> Separate costs you cannot avoid (signed contracts, salaries) from costs you can change. Only the flexible part can be cut later.</li>
-          </ul>
+    <div class="card gl" id="glCard">
+      <div class="hrow" style="margin-bottom:4px">
+        <div style="flex:1">
+          <h2 id="glTitle">Budget guidelines</h2>
+          <div class="csub" id="glSub">How resource planning budgets are set and managed. Read before you submit your 2027 numbers.</div>
         </div>
-
-        <div class="glcol">
-          <h3>Money rules</h3>
-          <ul>
-            <li><b>Everything in USD.</b> Budgets are set and tracked in US dollars.</li>
-            <li><b>Fixed rate.</b> We use 1 USD = 3.6725 AED all year. Currency moves are not your problem.</li>
-            <li><b>No carry-forward.</b> Money you do not spend does not roll over — not to next month, not to next year. If you truly need to carry something, ask and get it approved.</li>
-          </ul>
-
-          <h3>Changes &amp; approvals</h3>
-          <ul>
-            <li><b>Move money inside your own budget freely.</b> You can shift between your categories (e.g. systems → freelancers) without asking.</li>
-            <li><b>Moving money to another leader needs finance sign-off.</b></li>
-            <li><b>Hiring and exits always need sign-off</b> — even if the money is already in your budget.</li>
-            <li><b>Small overspends you absorb. Big ones need approval first.</b> Finance will set the limit.</li>
-          </ul>
-
-          <h3>How we run it</h3>
-          <ul>
-            <li><b>One system only.</b> All budgets are raised, changed and tracked in the budgeting system. No side spending.</li>
-            <li><b>Check monthly.</b> We compare actual vs budget every month.</li>
-            <li><b>Re-forecast each quarter.</b> Numbers are refreshed four times a year.</li>
-          </ul>
+        <div style="display:flex; gap:7px; align-items:flex-start">
+          <button class="btn" id="glEdit">✎ Edit</button>
+          <button class="btn" id="glReset" style="display:none">Reset to default</button>
         </div>
       </div>
-
-      <div class="glnote">
-        <b>A note on fairness.</b> Variances are a conversation, not a scorecard. Underspending because you found a smarter, cheaper way is a good thing — not something to hide or "use up" before year-end.
-      </div>
+      <div id="glBody"></div>
+      <div class="glhint" id="glHint" style="display:none">Editing — click any text to change it. Use ＋ to add a section or bullet, ✕ to remove. Click <b>Done</b> to save.</div>
     </div>
   </section>
 </div>
@@ -537,7 +511,7 @@ const byId = {};
 RAW.forEach(l => byId[l.id] = l);
 const teamIds = [...new Set(RAW.filter(l => l.home !== GROUP).map(l => l.home))];
 
-let state = { a:{}, l:{}, c:[], p:[], r:{}, h:[], gs:[] };  // h: hidden; gs: growth-spend groups [{id,name,leader,items:[{id,name,amt}]}]
+let state = { a:{}, l:{}, c:[], p:[], r:{}, h:[], gs:[], gl:null };  // gl: edited guidelines (null = use default)
 const openCat = new Set(); // 'CENTER|Category' expanded
 const openCl  = new Set(); // 'CENTER|Cluster' expanded advisory widget
 let lsOk = true;
@@ -553,6 +527,7 @@ function loadState(){
         state.r = s.r||{};
         state.h = Array.isArray(s.h)? s.h : [];
         state.gs = Array.isArray(s.gs)? s.gs : [];
+        state.gl = (s.gl && typeof s.gl==='object') ? s.gl : null;
       } }
   }catch(e){ lsOk = false; }
 }
@@ -619,6 +594,7 @@ function showView(k){
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'view-'+k));
   document.querySelectorAll('nav button.navlink[data-view]').forEach(b => b.classList.toggle('active', b.dataset.view === k));
   if(k === 'growth') renderGrowth();
+  if(k === 'rules') renderRules();
 }
 document.querySelectorAll('nav button.navlink[data-view]').forEach(b =>
   b.addEventListener('click', () => showView(b.dataset.view)));
@@ -1449,6 +1425,117 @@ document.addEventListener('click', e => {
   }
 });
 
+/* ================= Guidelines (editable) ================= */
+const GL_DEFAULT = {
+  title: 'Budget guidelines',
+  sub: 'How resource planning budgets are set and managed. Read before you submit your 2027 numbers.',
+  sections: [
+    { h:'Who owns what', items:[
+      'One owner per cost. Every expense belongs to one leader. No shared or unowned lines.',
+      'You own it both ways. You answer for spending too much and too little.',
+      'New requests go in the plan. A new hire, tool or campaign is added with its full cost and checked against cash flow before it is approved.' ]},
+    { h:'How to set the number', items:[
+      'Budget the full cost. Include everything a decision brings with it — not just the headline price.',
+      'A hire is not just a salary. Add agency or recruitment fees, visa, medical, social insurance, laptop, software seats and any per-diem.',
+      'Split the year into months. A budget is a monthly plan. Do not add up a few months and call it the year. Spread the full amount across all 12 months.',
+      'Mark what is fixed. Separate costs you cannot avoid (signed contracts, salaries) from costs you can change. Only the flexible part can be cut later.' ]},
+    { h:'Money rules', items:[
+      'Everything in USD. Budgets are set and tracked in US dollars.',
+      'Fixed rate. We use 1 USD = 3.6725 AED all year. Currency moves are not your problem.',
+      'No carry-forward. Money you do not spend does not roll over — not to next month, not to next year. If you truly need to carry something, ask and get it approved.' ]},
+    { h:'Changes & approvals', items:[
+      'Move money inside your own budget freely. You can shift between your categories (e.g. systems to freelancers) without asking.',
+      'Moving money to another leader needs finance sign-off.',
+      'Hiring and exits always need sign-off — even if the money is already in your budget.',
+      'Small overspends you absorb. Big ones need approval first. Finance will set the limit.' ]},
+    { h:'How we run it', items:[
+      'One system only. All budgets are raised, changed and tracked in the budgeting system. No side spending.',
+      'Check monthly. We compare actual vs budget every month.',
+      'Re-forecast each quarter. Numbers are refreshed four times a year.' ]}
+  ],
+  note: 'A note on fairness. Variances are a conversation, not a scorecard. Underspending because you found a smarter, cheaper way is a good thing — not something to hide or "use up" before year-end.'
+};
+let glEditing = false;
+function glData(){ return state.gl ? state.gl : JSON.parse(JSON.stringify(GL_DEFAULT)); }
+
+function renderRules(){
+  const d = glData();
+  document.getElementById('glTitle').textContent = d.title;
+  document.getElementById('glSub').textContent = d.sub;
+  // split sections into two columns
+  const mid = Math.ceil(d.sections.length/2);
+  const col = (secs, base) => '<div class="glcol">' + secs.map((s,si)=>{
+    const idx = base+si;
+    return '<div class="glsec" data-sec="'+idx+'">' +
+      '<div class="sechead"><h3 contenteditable="false" data-f="h" data-sec="'+idx+'">'+esc(s.h)+'</h3>' +
+      '<button class="secx" data-sec="'+idx+'" title="Remove section">✕</button></div>' +
+      '<ul>' + s.items.map((it,ii)=>
+        '<li class="glli" data-sec="'+idx+'" data-i="'+ii+'">' +
+          '<span class="glbody" contenteditable="false" data-sec="'+idx+'" data-i="'+ii+'">'+esc(it)+'</span>' +
+          '<button class="xbtn" data-sec="'+idx+'" data-i="'+ii+'" title="Remove bullet">✕</button>' +
+        '</li>').join('') +
+      '</ul>' +
+      '<button class="addbtn addbul" data-sec="'+idx+'">＋ Add bullet</button>' +
+    '</div>';
+  }).join('') + '</div>';
+  document.getElementById('glBody').innerHTML =
+    '<div class="glgrid">' + col(d.sections.slice(0,mid),0) + col(d.sections.slice(mid),mid) + '</div>' +
+    '<button class="addbtn addsec" style="margin-top:10px">＋ Add section</button>' +
+    '<div class="glnote"><span class="glbody" contenteditable="false" data-f="note">'+esc(d.note)+'</span></div>';
+  applyGlEditState();
+}
+function applyGlEditState(){
+  const card = document.getElementById('glCard');
+  card.classList.toggle('editing', glEditing);
+  document.getElementById('glHint').style.display = glEditing ? 'block' : 'none';
+  document.getElementById('glReset').style.display = glEditing ? 'inline-block' : 'none';
+  document.getElementById('glEdit').textContent = glEditing ? '✓ Done' : '✎ Edit';
+  ['glTitle','glSub'].forEach(id=>document.getElementById(id).setAttribute('contenteditable', glEditing));
+  document.querySelectorAll('#glBody [contenteditable]').forEach(el=>el.setAttribute('contenteditable', glEditing));
+}
+function glCapture(){
+  // read current DOM back into a data object
+  const d = { title:'', sub:'', sections:[], note:'' };
+  d.title = document.getElementById('glTitle').textContent.trim();
+  d.sub   = document.getElementById('glSub').textContent.trim();
+  const secEls = [...document.querySelectorAll('#glBody .glsec')].sort((a,b)=>(+a.dataset.sec)-(+b.dataset.sec));
+  secEls.forEach(se=>{
+    const h = se.querySelector('h3').textContent.trim();
+    const items = [...se.querySelectorAll('.glli .glbody')].map(x=>x.textContent.trim()).filter(Boolean);
+    d.sections.push({h, items});
+  });
+  const noteEl = document.querySelector('#glBody [data-f="note"]');
+  d.note = noteEl ? noteEl.textContent.trim() : '';
+  return d;
+}
+document.getElementById('glEdit').addEventListener('click', ()=>{
+  if(glEditing){ // Done -> save
+    state.gl = glCapture();
+    glEditing = false; saveState(); renderRules();
+    note('Guidelines saved');
+  } else { glEditing = true; applyGlEditState();
+    // focus is enabled; re-render not needed, just flip editable
+    document.querySelectorAll('#glBody [contenteditable]').forEach(el=>el.setAttribute('contenteditable','true'));
+  }
+});
+document.getElementById('glReset').addEventListener('click', ()=>{
+  if(!confirm('Reset guidelines to the default text? Your edits will be lost.')) return;
+  state.gl = null; glEditing = false; saveState(); renderRules(); note('Guidelines reset');
+});
+// add/remove section & bullets (only meaningful while editing)
+document.addEventListener('click', e=>{
+  if(!glEditing) return;
+  const card = e.target.closest && e.target.closest('#glCard'); if(!card) return;
+  const addSec = e.target.closest('.addsec');
+  if(addSec){ const d=glCapture(); d.sections.push({h:'New section', items:['New rule.']}); state.gl=d; renderRules(); return; }
+  const addBul = e.target.closest('.addbul');
+  if(addBul){ const d=glCapture(); const si=+addBul.dataset.sec; if(d.sections[si]) d.sections[si].items.push('New rule.'); state.gl=d; renderRules(); return; }
+  const xb = e.target.closest('.xbtn');
+  if(xb){ const d=glCapture(); const si=+xb.dataset.sec, ii=+xb.dataset.i; if(d.sections[si]) d.sections[si].items.splice(ii,1); state.gl=d; renderRules(); return; }
+  const sx = e.target.closest('.secx');
+  if(sx){ const d=glCapture(); const si=+sx.dataset.sec; d.sections.splice(si,1); state.gl=d; renderRules(); return; }
+});
+
 /* export */
 function stamp(){ return new Date().toISOString().slice(0,16).replace(':',''); }
 function csvEsc(v){ v = String(v==null?'':v); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
@@ -1532,6 +1619,7 @@ function buildJson(){
     new_cost_centers: state.c,
     hidden_lines: state.h,
     growth_spend: state.gs,
+    guidelines: state.gl || GL_DEFAULT,
     moves: RAW.filter(l=>cur(l)!==l.home).map(l=>({id:l.id, line:l.src, from:l.home, to:cur(l)})),
     lines: RAW.map(l=>({id:l.id, line:l.src, category:l.cat, entity:l.entity, original:l.home, current:cur(l), hidden:state.h.includes(l.id), monthly:l.mo, fy_2026:l.fy, fy_2027_projection:Math.round(l.mo*12)}))
   }, null, 2);
@@ -1587,7 +1675,7 @@ document.getElementById('ccyBtn').addEventListener('click', () => {
 
 document.getElementById('reset').addEventListener('click', () => {
   if(!confirm('Reset the board to the file baseline? All moves, leaders, renames, hidden lines and new cost centers on this device will be cleared.')) return;
-  state = {a:{}, l:{}, c:[], p:[], r:{}, h:[], gs:[]};
+  state = {a:{}, l:{}, c:[], p:[], r:{}, h:[], gs:[], gl:null};
   visSeries = null; openCl.clear();
   try{ localStorage.removeItem(LS_KEY); }catch(e){}
   note('Reset to baseline');
@@ -1600,6 +1688,7 @@ try{ const sc = localStorage.getItem(LS_KEY+'-ccy'); if(sc==='USD'||sc==='AED') 
 applyCcyTags();
 render();
 renderGrowth();
+renderRules();
 if(!lsOk) note('Local save unavailable — use Export');
 else if(Object.keys(state.a).length || Object.keys(state.l).length || state.c.length || state.h.length) note('Restored saved board');
 </script>
